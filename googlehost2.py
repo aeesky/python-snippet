@@ -15,6 +15,7 @@ import os
 import shutil
 import urllib
 from lxml import etree
+from lxml import html
 import re
 
 __author__ = 'Aeesky'
@@ -39,24 +40,39 @@ def GetHosts(text):
     '''
     try:  
         tree = etree.HTML(text)  
-        nodes = tree.xpath("//*[@id='storybox']/div/p[7]",smart_strings=True)
-        return etree.tostring(nodes[0])
+        nodes = tree.xpath("//*[@id='storybox']/div/div[4]",smart_strings=True)
+        return nodes
+        # return etree.tostring(nodes[0])
     except:  
         print("error to resolve the html ")  
     pass
-
+def GetUpdateTime(text):
+    try:  
+        tree = etree.HTML(text)  
+        nodes = tree.xpath("//*[@id='storybox']/div/p[2]/strong[2]",smart_strings=True)
+        return etree.tostring(nodes[0])
+    except:  
+        print("error to resolve update time ")  
+    pass
 if __name__ == "__main__":
     text = gethtml(urlpath)
+    # print GetUpdateTime(text)
     # Dom(text)
-    datas = GetHosts(text)
-    # 格式替换
-    datas = datas.replace('&#160;','').replace('<br/>','').replace('<p>','').replace('</p>','').replace('<span>','').replace('</span>','').strip()
-    print datas
+    items = GetHosts(text)
+    datas =[]
+    for onediv in items: 
+        item = html.tostring(onediv,encoding="utf-8",method='text', pretty_print=False)
+        if(item.count('.')>4):
+            print item
+            datas.insert(-1,item)
     print("backup hosts")
     shutil.copy(hosts, hostsBack)
     if os.path.exists(hosts):
         os.remove(hosts)
     print("update hosts")
     hostsFile = open(hosts, "a")
-    hostsFile.write(datas)
+    for x in datas:
+        hostsFile.write(x)
+        pass
+    # hostsFile.write(datas)
     hostsFile.close()
